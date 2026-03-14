@@ -377,8 +377,48 @@ class UI{
 	}
 
 	static function render_wizard_form($feed_type, $preview_url, $edit_id, $settings, $opts, $edit_input = ''){
-		echo'<form id="socialfeeds-wizard-form">';
-			echo'<input type="hidden" name="action" id="socialfeeds-form-action" value="socialfeeds_save_settings" class="socialfeeds-wizard-form">
+		$feed_name   = '';
+		$input_value = '';
+		$is_edit_mode = false;
+		$highest_number = 0;
+
+		if(!empty($opts['youtube_feeds']) && is_array($opts['youtube_feeds'])){
+
+			foreach($opts['youtube_feeds'] as $f){
+
+				if(!is_array($f)){
+					continue;
+				}
+
+				if(!empty($edit_id) && isset($f['id']) && $f['id'] == $edit_id){
+					$feed_name   = isset($f['name']) ? $f['name'] : '';
+					$input_value = isset($f['input']) ? $f['input'] : '';
+					$is_edit_mode = true;
+				}
+
+				if(empty($is_edit_mode) && isset($f['type'], $f['name']) && $f['type'] === $feed_type && preg_match('/(\d+)$/', $f['name'], $m)){
+					$highest_number = max($highest_number, (int) $m[1]);
+				}
+			}
+		}
+
+		if(empty($is_edit_mode)){
+			$next_number = $highest_number + 1;
+
+			$types = [
+				'channel' => 'Channel',
+				'playlist' => 'Playlist',
+				'search' => 'Search',
+				'single-videos' => 'Single Videos',
+			];
+
+			$label = isset($types[$feed_type]) ? $types[$feed_type] : '';
+
+			$feed_name = 'YouTube Feed - ' . ($label ? $label . ' ' : '') . $next_number;
+		}
+		
+		echo '<form id="socialfeeds-wizard-form">
+		<input type="hidden" name="action" id="socialfeeds-form-action" value="socialfeeds_save_settings" class="socialfeeds-wizard-form">
 			<input type="hidden" id="socialfeeds_stage" name="stage" value="">
 			<input type="hidden" name="feed_type" id="socialfeeds-feed-type" value="'.esc_attr($feed_type).'">
 			<input type="hidden" id="preview_url_hidden" name="preview_url" value="'.esc_attr($preview_url).'">
@@ -401,10 +441,22 @@ class UI{
 		
 		// TAB 2: CUSTOMIZE & SETTINGS
 		echo '<div class="socialfeeds-wizard-tab-content" id="socialfeeds-content-customize">';
-		self::render_customize_tab($settings, $preview_url, $edit_id, $feed_type, []);
-		echo '</div>';
 		
-		echo '</div></form>';
+		// Centered editable feed name
+		echo'<div class="socialfeeds-customize-header" style="text-align:center;margin-bottom:30px;">
+		<div class="socialfeeds-inline-name-wrapper" style="display:inline-flex;align-items:center;gap:10px;">
+		<span class="socialfeeds-feed-name-text" style="font-size:15px;font-weight:600;">'.esc_html($feed_name).'</span>
+		<input type="text" class="socialfeeds-feed-name-input" value="'.esc_attr($feed_name).'" style="display:none;font-size:15px;padding:4px 8px;" />
+		<button type="button" class="socialfeeds-edit-name-btn" title="Edit" style="display:none;"> <span class="dashicons dashicons-edit"></span></button>
+		<button type="button" class="socialfeeds-save-name-btn" data-feed-id="'.esc_attr($edit_id).'" data-platform="youtube" style="display:none;" title="Save"> <span class="dashicons dashicons-yes"></span></button>';
+
+		echo'</div></div>';
+
+		self::render_customize_tab($settings, $preview_url, $edit_id, $feed_type, [], $feed_name);
+
+		echo'</div>
+		</div> 
+		</form>';
 	}
 
 	static function render_source_tab($feed_type, $edit_id, $opts, $edit_input = ''){

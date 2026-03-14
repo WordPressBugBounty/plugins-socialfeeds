@@ -461,7 +461,7 @@ class Shortcodes{
 		LOAD MORE + SUBSCRIBE BUTTON (INLINE ROW)
 		-------------------------------------------*/
 
-		if($load_more_enabled && $rendered_count > 0 && (!isset($feed['type']) || $feed['type'] !== 'single-videos') && $rendered_count >= $limit){
+		if(!empty($load_more_enabled) && $rendered_count > 0 && (!isset($feed['type']) || $feed['type'] !== 'single-videos') && $rendered_count >= $limit){
 
 			$feed_id = isset($feed['id']) ? $feed['id'] : '';
 			$feed_type = isset($feed['type']) ? $feed['type'] : 'channel';
@@ -502,7 +502,7 @@ class Shortcodes{
 
 				$html .= "<a href='".esc_url($sub_href)."' target='_blank' rel='noopener' class='socialfeeds-btn-subscribe' style='background: ".esc_attr($subscribe_bg)."; color:".esc_attr($subscribe_text_color)." !important;'>" . esc_html($subscribe_text) . "</a>";
 				// load more button hover
-				if($load_more_enabled && $rendered_count > 0 && ( ! isset( $feed['type'] ) || $feed['type'] !== 'single-videos' ) && $rendered_count >= $limit ){
+				if(!empty($load_more_enabled) && $rendered_count > 0 && ( ! isset( $feed['type'] ) || $feed['type'] !== 'single-videos' ) && $rendered_count >= $limit ){
 
 					$load_more_hover = isset( $opts['youtube_load_more_hover_color']) ? $opts['youtube_load_more_hover_color'] : 'rgb(24, 3, 85)';
 
@@ -676,7 +676,7 @@ class Shortcodes{
 
 			$duration = isset($item['contentDetails']['duration']) ? $item['contentDetails']['duration'] : (isset($item['duration']) ? $item['duration'] : '');
 
-			if($show_duration && !empty($duration)){
+			if(!empty($show_duration) && !empty($duration)){
 				$dur = self::format_iso_duration($duration);
 				$inner_content .= "<div class='socialfeeds-video-duration'>".esc_html($dur)."</div>";
 			}
@@ -686,7 +686,7 @@ class Shortcodes{
 			}
 			$inner_content .= "</a>";
 
-			if($show_title){
+			if(!empty($show_title)){
 				$title_tag = ('list' === $display) ? 'h3' : 'h5';
 
 				$inner_content .= "<" . esc_html($title_tag) . " class='socialfeeds-video-title'" . (!empty($text_color_style) ? " style='" . esc_attr($text_color_style) . "'" : '') . ">" . esc_html($title) . "</" . esc_html($title_tag) . ">";
@@ -736,7 +736,7 @@ class Shortcodes{
 				$html .= wp_kses_post($inner_content);
 				$html .= "</div>";
 			} elseif('list' === $display && defined('SOCIALFEEDS_PRO_VERSION')){
-				$html .= "<div class='socialfeeds-video-item socialfeeds-list-item'";
+				$html .= "<div class='socialfeeds-video-item socialfeeds-list-item hover-effect-" . esc_attr($hover_effect) . "'";
 				if(!empty($item_style)){
 					$html .= " style='".esc_attr($item_style)."'";
 				}
@@ -744,7 +744,7 @@ class Shortcodes{
 				$html .= wp_kses_post($inner_content);
 				$html .= "</div>";
 			} elseif('carousel' === $display && defined('SOCIALFEEDS_PRO_VERSION')){
-				$html .= "<div class='socialfeeds-video-item socialfeeds-carousel-item'";
+				$html .= "<div class='socialfeeds-video-item socialfeeds-carousel-item hover-effect-" . esc_attr($hover_effect) . "'";
 				if(!empty($item_style)){
 					$html .= " style='".esc_attr($item_style)."'";
 				}

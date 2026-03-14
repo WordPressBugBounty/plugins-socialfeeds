@@ -464,10 +464,20 @@ jQuery(document).ready(function ($) {
 
 	function re_initialize_form_handlers() {
 		let $form = $('#socialfeeds-wizard-form, #socialfeeds-instagram-wizard-form');
+		let action_val = $form.find('input[name="action"]').val() || '',
+		is_instagram = action_val.indexOf('instagram') !== -1 || window.location.hash.indexOf('instagram') !== -1,
+		platform = is_instagram ? 'instagram' : 'youtube';
+		
+		// handle edit icon visibility based on edit mode vs new feed
+		if ($form.length) {
+			if (!$('#socialfeeds-edit-id').length && !$form.find('input[name="edit_id"]').val()) {
+				$('#socialfeeds-wizard-form').find('.socialfeeds-edit-name-btn').hide();
+			} else {
+				$('#socialfeeds-wizard-form').find('.socialfeeds-edit-name-btn').show();
+			}
+		}
+		
 		if ($form.length && !$('#socialfeeds-edit-id').length && !$form.find('input[name="edit_id"]').val()) {
-			let action_val = $form.find('input[name="action"]').val() || '',
-			is_instagram = action_val.indexOf('instagram') !== -1 || window.location.hash.indexOf('instagram') !== -1,
-			platform = is_instagram ? 'instagram' : 'youtube';
 
 			let existing_client = $form.find('input[name="client_feed_id"]');
 			if (!existing_client.length || !existing_client.val()) {
@@ -519,7 +529,10 @@ jQuery(document).ready(function ($) {
 					if (response.success) {
 						show_toast('Feed saved successfully!');
 
-						let saved_id = form_data.get('client_feed_id') || form_data.get('edit_id');
+						// Use feed_id from server response (most accurate), then fall back to form data
+						let saved_id = response.data?.feed_id || form_data.get('client_feed_id') || form_data.get('edit_id');
+						let saved_name = response.data?.feed_name || null;
+						
 						if (saved_id) {
 							if (socialfeedsData.existing_ids && !socialfeedsData.existing_ids.includes(saved_id)) {
 								socialfeedsData.existing_ids.push(saved_id);
@@ -539,6 +552,22 @@ jQuery(document).ready(function ($) {
 							}
 
 							window.history.replaceState({}, '', url.toString());
+
+								form.find('.socialfeeds-save-name-btn').attr('data-feed-id', saved_id);
+								form.find('.socialfeeds-edit-name-btn').show();
+								let $text = $('.socialfeeds-feed-name-text');
+								let $input = $('.socialfeeds-feed-name-input');
+								
+								if(saved_name){
+									$text.text(saved_name);
+									$input.val(saved_name);
+								} else if ($text.length && $text.text().trim() === ''){
+									let platform = is_instagram ? 'instagram' : 'youtube';
+									let defaultName = 'Feed - ' + (platform === 'instagram' ? (form.find('input[name="feed_type"]').val() || 'username') : (form.find('select[name="feed_type"]').val() || 'channel')) + ' ' + saved_id;
+									$text.text(defaultName);
+									$input.val(defaultName);
+								}
+
 						}
 
 					} else {
@@ -1615,23 +1644,22 @@ jQuery(document).ready(function ($) {
 				data: formData,
 				processData: false,
 				contentType: false,
-				success: function(response){
-					if(response.success){
-						wrapper.find('.socialfeeds-feed-name-text strong').text(newName);
-						wrapper.find('.socialfeeds-feed-name-input').hide();
-						wrapper.find('.socialfeeds-feed-name-text').show();
-						wrapper.find('.socialfeeds-edit-name-btn').show();
-						btn.hide();
-						show_toast('Feed name updated successfully!');
-					} else {
-						show_toast(response.data?.message || 'Failed to save name.', 'error');
+				success: function (response) {
+					if (response.success && response.data.feed_id) {
+						feedId = response.data.feed_id;
+						row.attr('data-feed-id', feedId);
+						btn.attr('data-feed-id', feedId);
 					}
+					wrapper.find('.socialfeeds-feed-name-text').html('<strong>' + newName + '</strong>');
 				},
-				error: function(){
+				error: function () {
 					show_toast('Error saving feed name. Please try again.', 'error');
 				},
-				complete: function(){
-					btn.prop('disabled', false).html(original_text);
+				complete: function () {
+					wrapper.find('.socialfeeds-feed-name-input').hide();
+					wrapper.find('.socialfeeds-feed-name-text').show();
+					wrapper.find('.socialfeeds-edit-name-btn').show(); 
+					btn.hide().prop('disabled', false).html(original_text);
 				}
 			});
 		});

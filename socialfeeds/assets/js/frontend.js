@@ -1,8 +1,8 @@
 jQuery(document).ready(function ($) {
 
 	// ===== Video play mode: LIGHTBOX, INLINE, NEWTAB =====
-	$('.socialfeeds-video-item a, .socialfeeds-media-link, .socialfeeds-carousel-item a, .socialfeeds-list-item iframe').on('click', function(e){
-		let $link = $(this).closest('a');
+	$('.socialfeeds-youtube-feed').on('click','.socialfeeds-video-item a, .socialfeeds-media-link, .socialfeeds-carousel-item a, .socialfeeds-list-item iframe',function(e){
+  	let $link = $(this).closest('a');
 		if (!$link.length) $link = $(this);
 
 		// If it's an iframe click (list view), let it be

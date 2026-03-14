@@ -4,7 +4,7 @@ Tags: social feeds, instagram feed, youtube feed, social media, youtube videos
 Requires at least: 5.0
 Tested up to: 6.9
 Requires PHP: 7.2
-Stable tag: 1.0.3
+Stable tag: 1.0.4
 License: GPLv2
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -14,45 +14,48 @@ YouTube feeds for WordPress with simple Setup and Settings options.
 
 SocialFeeds is a lightweight and easy-to-use WordPress plugin designed to showcase Instagram and YouTube content directly on your website. With quick setup and shortcode support, you can display social media feeds anywhere on your site and keep your content fresh and engaging.
 
+You can find our official documentation at [https://socialfeeds.org/docs](https://socialfeeds.org/docs). We are also active in our community support forums on wordpress.org if you are one of our free users. Our Premium Support Ticket System is at [https://softaculous.deskuss.com](https://softaculous.deskuss.com)
+
+[Home Page](https://socialfeeds.org "SocialFeeds Homepage") | [Support](https://softaculous.deskuss.com "SocialFeeds Support") | [Documents](http://socialfeeds.org/docs "Documents")
+
 == SocialFeeds YouTube Free Features ==
 
-- Display YouTube channel videos
-- Quick and easy feed setup from the dashboard
-- Show video title, description, play icon, lazy loading, and click-to-play action
-- Apply hover effects on video items
-- Display feed header with channel name, logo, description, custom logo, and banner
-- Show YouTube subscribe button in the header
-- Load more videos using the Load More button
-- Basic layout and style customization
-- Fully responsive and theme compatible
+* **Display YouTube Channel Videos** – Show videos directly from your YouTube channel on your website.
+* **Quick and Easy Feed Setup** – Easily create and manage your YouTube feed from the WordPress dashboard.
+* **Video Information Display** – Display video title, description, play icon, lazy loading, and click-to-play functionality.
+* **Hover Effects** – Apply hover animation and visual effects to video items for better user interaction.
+* **Custom Feed Header** – Display a header with channel name, logo, description, custom logo, and banner image.
+* **YouTube Subscribe Button** – Add a YouTube subscribe button in the feed header to increase channel subscribers.
+* **Load More Videos** – Allow users to load additional videos using a convenient Load More button.
+* **Basic Layout and Style Customization** – Customize basic layout and styling options to match your website design.
+* **Fully Responsive Design** – Feeds automatically adjust to desktop, tablet, and mobile devices and work with most WordPress themes.
 
 == Upgrade to SocialFeeds PRO for More Power ==
 
 Unlock advanced capabilities with **SocialFeeds PRO**, such as:
 
-- Connect multiple YouTube channels and Instagram accounts
-- Display YouTube video duration, publish date, view count, like count, and comment count
-- Show YouTube single videos, playlist feeds, and live stream videos
-- Enable YouTube video search and advanced filtering options
-- Apply advanced design customization for YouTube feeds including colors, fonts, spacing, and styling
-- Display Instagram feeds using Grid, Carousel, and Masonry layouts
-- Control Instagram feed columns for desktop, tablet, and mobile devices
-- Set Instagram content limits and post loading options
-- Customize Instagram feed header position, size, profile avatar, bio, follower count, and media count
-- Enhance Instagram post experience with captions, likes, comments, posts, reels, icons, and play modes
-- Enable Instagram hover states and interaction effects
-- Add and customize Instagram follow button
-- Customize Instagram Load More button behavior and design
-- Sort Instagram posts by newest, most liked, or random order
-- Filter Instagram posts by post type, content, and media format
-- Control Instagram post spacing, alignment, and aspect ratio
+* **Multiple Account Support** – Connect and manage multiple YouTube channels and Instagram accounts.
+* **Advanced Video Details** – Display video duration, publish date, view count, like count, and comment count.
+* **Multiple YouTube Feed Types** – Show Channel Feeds, Playlist Feeds, Search Feeds, Single Videos, and Live Stream Videos.
+* **Advanced Feed Design Customization** – Customize colors, fonts, spacing, layouts, and styling for YouTube feeds.
+* **Instagram Feed Layouts** – Display Instagram feeds using Grid, Carousel, and Masonry layouts.
+* **Responsive Instagram Columns** – Control the number of columns for desktop, tablet, and mobile devices.
+* **Post Limits and Loading Control** – Set limits on the number of Instagram posts displayed and configure loading behavior.
+* **Customizable Instagram Header** – Customize header position, profile avatar, bio, follower count, and media count.
+* **Enhanced Instagram Post Display** – Show captions, likes, comments, reels, icons, and play modes.
+* **Instagram Hover Effects** – Enable hover states and interaction effects for Instagram posts.
+* **Instagram Follow Button** – Add and customize a follow button to grow your Instagram audience.
+* **Load More Button Customization** – Control the behavior and design of the Instagram Load More button.
+* **Post Sorting Options** – Sort Instagram posts by newest, most liked, or random order.
+* **Layout Spacing and Aspect Ratio Control** – Adjust spacing between posts and control the media aspect ratio.
+* **Live Shortcode Preview** – Display a live preview of the feed using the Preview Block inside the editor.
 
 == Why Use SocialFeeds? ==
 
 - Increase visitor engagement with live social media content
 - Promote your YouTube and Instagram profiles directly on your website
 - Improve website appearance with modern and responsive feed layouts
-- Easy integration with shortcodes and page builders
+- Easy integration with shortcodes
 
 = Third Party API usage =
 
@@ -98,14 +101,16 @@ Yes. The Pro version allows multiple feeds and accounts.
 Yes. Basic customization is available in the free version, with advanced controls in Pro.
 
 = Is SocialFeeds compatible with all themes? =
-Yes. SocialFeeds works with all standard WordPress themes and page builders.
+Yes. SocialFeeds works with all standard WordPress themes.
 
 == Screenshots ==
-1. SocialFeeds dashboard
+
+1. SocialFeeds Dashboard
 2. YouTube Feeds Type
-3. Youtube Customize
+3. YouTube Customize
 4. Instagram Accounts
-5. All Feeds
+5. Instagram Customize
+6. All Feeds
 
 == Start Using SocialFeeds ==
 
@@ -113,6 +118,12 @@ Install SocialFeeds today to display your Instagram photos and YouTube videos on
 
 
 == Changelog ==
+
+= 1.0.4 =
+
+* [Improvement] You can now modify the feed name from the Customize tab.
+* [Bug-Fix] Fixed an issue where YouTube hover effects were not working in the List and Carousel layouts. 
+* [Bug-Fix] Fixed an issue where the video play mode was not applied to newly loaded videos after clicking Load More.
 
 = 1.0.3 =
 

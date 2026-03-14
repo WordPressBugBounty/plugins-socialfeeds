@@ -96,7 +96,7 @@ class Ajax{
 				$input_val = sanitize_text_field(wp_unslash($_POST['video_ids']));
 			}
 
-			if($input_val){
+			if(!empty($input_val)){
 				$preview = isset($_POST['preview_url']) ? rawurldecode(sanitize_text_field(wp_unslash($_POST['preview_url']))) : '';
 				$edit_id = isset($_POST['edit_id']) ? sanitize_text_field(wp_unslash($_POST['edit_id'])) : '';
 				$channel_subscriber_count = isset($_POST['channel_subscriber_count']) ? sanitize_text_field(wp_unslash($_POST['channel_subscriber_count'])) : 0;
@@ -210,8 +210,11 @@ class Ajax{
 
 		update_option('socialfeeds_youtube_option', $youtube_opts);
 
-		$response = ['message' => esc_html__('Settings saved successfully.', 'socialfeeds')];
-
+		$response = [
+			'message' => esc_html__('Settings saved successfully.', 'socialfeeds'),
+			'feed_id' => !empty($feed_id) ? $feed_id : '',
+			'feed_name' => !empty($name) ? $name : '',
+		];
 
 		wp_send_json_success($response);
 	}
@@ -244,7 +247,7 @@ class Ajax{
 		if($feed_type === 'channel'){
 			$input = isset($_POST['channel_id']) ? sanitize_text_field(wp_unslash($_POST['channel_id'])) : '';
 
-			if($input){
+			if(!empty($input)){
 				if(strpos($input, 'UC') === 0){
 					$channel_id = $input;
 				} else{
@@ -263,7 +266,7 @@ class Ajax{
 				}
 			}
 
-			if($channel_id){
+			if(!empty($channel_id)){
 				$query_args = [
 					'key' => $api_key,
 					'part' => 'snippet',
@@ -273,7 +276,7 @@ class Ajax{
 					'maxResults' => $per_page,
 				];
 				
-				if($page_token){
+				if(!empty($page_token)){
 					$query_args['pageToken'] = $page_token;
 				}
 				
@@ -315,7 +318,7 @@ class Ajax{
 
 		/* ---------------- VIDEO DETAILS ---------------- */
 		$video_ids = array_slice(array_column($items, 'videoId'), 0, $per_page);
-		if($video_ids && class_exists('\SocialFeedsPro\YouTube') && method_exists('\SocialFeedsPro\YouTube', 'fetch_video_details')){
+		if(!empty($video_ids) && class_exists('\SocialFeedsPro\YouTube') && method_exists('\SocialFeedsPro\YouTube', 'fetch_video_details')){
 			$items = \SocialFeedsPro\YouTube::fetch_video_details($items, $api_key, $per_page);
 		}
 
@@ -323,7 +326,7 @@ class Ajax{
 		$preview_channel_id = isset($items[0]['channelId']) ? $items[0]['channelId'] : $channel_id;
 		$channel_info = null;
 
-		if($preview_channel_id){
+		if(!empty($preview_channel_id)){
 			$body = self::fetch_url(add_query_arg([
 				'key'  => $api_key,
 				'part' => 'snippet,brandingSettings,statistics',
@@ -331,7 +334,8 @@ class Ajax{
 			], 'https://www.googleapis.com/youtube/v3/channels'));
 
 			$snippet = isset($body['items'][0]['snippet']) ? $body['items'][0]['snippet'] : null;
-			if($snippet){
+
+			if(!empty($snippet)){
 				$subscriber_count = isset($body['items'][0]['statistics']['subscriberCount']) ?  $body['items'][0]['statistics']['subscriberCount'] : 0;
 				$channel_info = array(
 					'id' => $preview_channel_id,
@@ -476,7 +480,7 @@ class Ajax{
 			}
 
 			$response_data = ['items' => $items];
-			if($nextPageToken){
+			if(!empty($nextPageToken)){
 				$response_data['nextPageToken'] = $nextPageToken;
 			}
 
@@ -549,7 +553,7 @@ class Ajax{
 					$vid = isset($it['id']['videoId']) ? $it['id']['videoId'] : '';			
 			}
 
-			if(!$vid){
+			if(empty($vid)){
 				continue;
 			}
 
