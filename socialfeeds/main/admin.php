@@ -42,6 +42,14 @@ class Admin{
 				self::pro_placeholder_page();
 			}
 		echo '</div>';
+		
+		echo '<div id="socialfeeds-facebook" class="socialfeeds-tab-content" style="display:none;">';
+			if(defined('SOCIALFEEDS_PRO_VERSION')){
+				\SocialFeedsPro\Admin::render_facebook_settings();
+			} else {
+				self::pro_placeholder_page();
+			}
+		echo '</div>';
 
 		echo '<div id="socialfeeds-feeds" class="socialfeeds-tab-content" style="display:none;">';
 			\SocialFeeds\Settings\UI::settings_tab();
@@ -66,6 +74,7 @@ class Admin{
 			'dashboard' => ['label' => 'Dashboard', 'icon' => 'dashboard'],
 			'youtube' => ['label' => 'YouTube', 'icon' => 'youtube'],
 			'instagram' => ['label' => 'Instagram', 'icon' => 'instagram', 'pro' => true],
+			'facebook' => ['label' => 'Facebook', 'icon' => 'facebook', 'pro' => true],
 			'feeds' => ['label' => 'Feeds', 'icon' => 'admin-settings'],
 			'support' => ['label' => 'Support', 'icon' => 'sos'],
 		];
@@ -156,6 +165,11 @@ class Admin{
 		$ig_feeds = isset($instagram_opts['instagram_feeds']) ? $instagram_opts['instagram_feeds'] : [];
 		$ig_ids = array_column($ig_feeds, 'id');
 		$feed_ids = array_merge($feed_ids, $ig_ids);
+
+		$facebook_opts = get_option('socialfeeds_facebook_option', []);
+		$fb_feeds = isset($facebook_opts['facebook_feeds']) ? $facebook_opts['facebook_feeds'] : [];
+		$fb_ids = array_column($fb_feeds, 'id');
+		$feed_ids = array_merge($feed_ids, $fb_ids);
 
 		// Get global ID counter
 		$global_counter = get_option('socialfeeds_global_id_counter', 0);

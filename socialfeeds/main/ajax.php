@@ -129,7 +129,7 @@ class Ajax{
 						// Get global ID counter
 						$global_counter = get_option('socialfeeds_global_id_counter', 0);
 					
-						// Collect all existing IDs from both YouTube and Instagram
+						// Collect all existing IDs from YouTube, Instagram and Facebook
 						$all_existing_ids = [];
 					
 						// YouTube IDs
@@ -143,6 +143,15 @@ class Ajax{
 						$instagram_opts = get_option('socialfeeds_instagram_option', []);
 						$instagram_feeds = isset($instagram_opts['instagram_feeds']) ? $instagram_opts['instagram_feeds'] : [];
 						foreach($instagram_feeds as $f){
+							if(isset($f['id'])){
+								$all_existing_ids[] = intval($f['id']);
+							}
+						}
+
+						// Facebook IDs
+						$facebook_opts = get_option('socialfeeds_facebook_option', []);
+						$facebook_feeds = isset($facebook_opts['facebook_feeds']) ? $facebook_opts['facebook_feeds'] : [];
+						foreach($facebook_feeds as $f){
 							if(isset($f['id'])){
 								$all_existing_ids[] = intval($f['id']);
 							}
@@ -369,6 +378,9 @@ class Ajax{
 		if($platform === 'instagram'){
 			$opts = get_option('socialfeeds_instagram_option', []);
 			$key = 'instagram_feeds';
+		} elseif($platform === 'facebook'){
+			$opts = get_option('socialfeeds_facebook_option', []);
+			$key = 'facebook_feeds';
 		} else {
 			$opts = get_option('socialfeeds_youtube_option', []);
 			$key = 'youtube_feeds';
@@ -389,7 +401,9 @@ class Ajax{
 			
 			if($platform === 'instagram'){
 				update_option('socialfeeds_instagram_option', $opts);
-			} else{
+			} elseif($platform === 'facebook'){
+				update_option('socialfeeds_facebook_option', $opts);
+			} else {
 				update_option('socialfeeds_youtube_option', $opts);
 			}
 
@@ -659,8 +673,13 @@ class Ajax{
 			wp_send_json_error(['message' => esc_html__('Missing required fields', 'socialfeeds')]);
 		}
 
-		$option_key = $platform === 'youtube' ? 'socialfeeds_youtube_option' : 'socialfeeds_instagram_option';
-		$feeds_key = $platform === 'youtube' ? 'youtube_feeds' : 'instagram_feeds';
+		if($platform === 'facebook'){
+			$option_key = 'socialfeeds_facebook_option';
+			$feeds_key = 'facebook_feeds';
+		} else {
+			$option_key = $platform === 'youtube' ? 'socialfeeds_youtube_option' : 'socialfeeds_instagram_option';
+			$feeds_key = $platform === 'youtube' ? 'youtube_feeds' : 'instagram_feeds';
+		}
 		$options = get_option($option_key, []);
 		$feeds = isset($options[$feeds_key]) ? $options[$feeds_key] : [];
 

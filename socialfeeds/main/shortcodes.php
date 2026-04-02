@@ -13,28 +13,33 @@ class Shortcodes{
 	}
 
 	static function unified_feed($atts){
-		$atts = shortcode_atts(['id' => '', 'platform' => ''], $atts);
+		// Keep original atts for passthrough, but extract key identifying attributes
+		$extracted = shortcode_atts(['id' => '', 'platform' => ''], $atts);
 		
-		$platform = strtolower(trim($atts['platform']));
-		$id = trim($atts['id']);
+		$platform = strtolower(trim($extracted['platform']));
+		$id = trim($extracted['id']);
 		
 		if(empty($platform)){
-			return '<p class="socialfeeds-subtitle">' . esc_html__('Platform attribute is required. Use platform="youtube" or platform="instagram".', 'socialfeeds') . '</p>';
+			return '<p class="socialfeeds-subtitle">' . esc_html__('Platform attribute is required. Use platform="youtube", "instagram" or "facebook".', 'socialfeeds') . '</p>';
 		}
 		
 		if(empty($id)){
 			return '<p class="socialfeeds-subtitle">' . esc_html__('ID attribute is required.', 'socialfeeds') . '</p>';
 		}
 		
-		// Route to appropriate platform handler
+		// Route to appropriate platform handler, passing ALL attributes
 		if($platform === 'youtube'){
-			return self::youtube_feed_by_id(['id' => $id]);
+			return self::youtube_feed_by_id($atts);
 		} elseif($platform === 'instagram'){
 			if(class_exists('\SocialFeedsPro\ShortcodeRender') && defined('SOCIALFEEDS_PRO_VERSION')){
-				return \SocialFeedsPro\ShortcodeRender::instagram_feed(['id' => $id]);
+				return \SocialFeedsPro\ShortcodeRender::instagram_feed($atts);
+			}
+		} elseif($platform === 'facebook'){
+			if(class_exists('\SocialFeedsPro\ShortcodeRender') && defined('SOCIALFEEDS_PRO_VERSION')){
+				return \SocialFeedsPro\ShortcodeRender::facebook_feed($atts);
 			}
 		} else {
-			return '<p class="socialfeeds-subtitle">' . esc_html__('Invalid platform. Use platform="youtube" or platform="instagram".', 'socialfeeds') . '</p>';
+			return '<p class="socialfeeds-subtitle">' . esc_html__('Invalid platform. Use platform="youtube", "instagram" or "facebook".', 'socialfeeds') . '</p>';
 		}
 	}
 

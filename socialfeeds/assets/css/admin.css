@@ -320,6 +320,13 @@ cursor: not-allowed !important;
 pointer-events: none !important;
 }
 
+.socialfeeds-next-btn-wrap .button.socialfeeds-ig-modal-wide,
+.socialfeeds-fb-modal-wide {
+max-width: 680px !important;
+max-height: 90vh !important;
+overflow-y: auto !important;
+}
+
 /* ===== WIZARD TABS ===== */
 .socialfeeds-wizard-tabs {
 display: flex;

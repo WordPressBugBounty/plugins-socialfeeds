@@ -337,6 +337,14 @@ jQuery(document).ready(function ($) {
 			$modal.addClass('active').css({ display: 'flex', visibility: 'visible', opacity: 0 }).stop().animate({ opacity: 1 }, 200);
 		});
 
+		$('.socialfeeds-facebook-settings').on('click', function (e){
+			e.preventDefault();
+			let $modal = $('#socialfeeds-fb-connection-modal');
+			if (!$modal.length) return;
+			if (!$modal.parent().is('body')) $modal.appendTo(document.body);
+			$modal.addClass('active').css({ display: 'flex', visibility: 'visible', opacity: 0 }).stop().animate({ opacity: 1 }, 200);
+		});
+
 		$('.socialfeeds-settings-btn').on('click', function (e) {
 			e.preventDefault();
 			let page_name = $(this).data('page'),
@@ -463,43 +471,54 @@ jQuery(document).ready(function ($) {
 	activate_tab_from_url();
 
 	function re_initialize_form_handlers() {
-		let $form = $('#socialfeeds-wizard-form, #socialfeeds-instagram-wizard-form');
-		let action_val = $form.find('input[name="action"]').val() || '',
-		is_instagram = action_val.indexOf('instagram') !== -1 || window.location.hash.indexOf('instagram') !== -1,
-		platform = is_instagram ? 'instagram' : 'youtube';
+		let $forms = $('#socialfeeds-wizard-form, #socialfeeds-instagram-wizard-form, #socialfeeds-facebook-wizard-form');
 		
-		// handle edit icon visibility based on edit mode vs new feed
-		if ($form.length) {
-			if (!$('#socialfeeds-edit-id').length && !$form.find('input[name="edit_id"]').val()) {
-				$('#socialfeeds-wizard-form').find('.socialfeeds-edit-name-btn').hide();
+		$forms.each(function() {
+			let $form = $(this);
+			let form_id = $form.attr('id') || '';
+			let platform = 'youtube';
+			
+			if (form_id.indexOf('instagram') !== -1) {
+				platform = 'instagram';
+			} else if (form_id.indexOf('facebook') !== -1) {
+				platform = 'facebook';
+			}
+
+			// handle edit icon visibility based on edit mode vs new feed
+			if (!$form.find('input[name="edit_id"]').val()) {
+				$form.find('.socialfeeds-edit-name-btn').hide();
 			} else {
-				$('#socialfeeds-wizard-form').find('.socialfeeds-edit-name-btn').show();
+				$form.find('.socialfeeds-edit-name-btn').show();
 			}
-		}
-		
-		if ($form.length && !$('#socialfeeds-edit-id').length && !$form.find('input[name="edit_id"]').val()) {
+			
+			// handle shortcode for new feeds (pre-save)
+			if (!$form.find('input[name="edit_id"]').val()) {
+				let existing_client = $form.find('input[name="client_feed_id"]');
+				if (!existing_client.length || !existing_client.val()) {
+					let pre_id = generate_unique_id();
+					if (existing_client.length) {
+						existing_client.val(pre_id);
+					} else {
+						$form.append('<input type="hidden" name="client_feed_id" value="' + pre_id + '">');
+					}
+					window.socialfeedsEmbedTempId = pre_id;
+				}
 
-			let existing_client = $form.find('input[name="client_feed_id"]');
-			if (!existing_client.length || !existing_client.val()) {
-				let pre_id = generate_unique_id();
-				if (existing_client.length) existing_client.val(pre_id);
-				else $form.append('<input type="hidden" name="client_feed_id" value="' + pre_id + '">');
-				window.socialfeedsEmbedTempId = pre_id;
+				let current_id = $form.find('input[name="client_feed_id"]').val();
+				if (current_id) {
+					let shortcode = '[socialfeeds id="' + current_id + '" platform="' + platform + '"]';
+					$form.find('#socialfeeds-top-shortcode').text(shortcode);
+					$form.find('.socialfeeds-copy-shortcode').attr('data-shortcode', shortcode).data('shortcode', shortcode);
+				}
 			}
+		});
 
-			let current_id = $form.find('input[name="client_feed_id"]').val() || $form.find('input[name="edit_id"]').val();
-			if (current_id) {
-				let shortcode = '[socialfeeds id="' + current_id + '" platform="' + platform + '"]';
-				$('#socialfeeds-top-shortcode').text(shortcode);
-				$('.socialfeeds-copy-shortcode, .socialfeeds-top-shortcode') .attr('data-shortcode', shortcode) .data('shortcode', shortcode);
-			}
-		}
-
-		$form.not('#socialfeeds-instagram-wizard-form').on('submit', function (e) {
+		// Submit handler for YouTube (and anything not Instagram/Facebook PRO)
+		$('#socialfeeds-wizard-form').on('submit', function (e) {
 			e.preventDefault();
 			let form = $(this);
 
-			if (!$('#socialfeeds-edit-id').length) {
+			if (!form.find('input[name="edit_id"]').val()) {
 				let client_input = form.find('input[name="client_feed_id"]');
 				if (!client_input.length || !client_input.val()) {
 					let gen_id = generate_unique_id();
@@ -529,7 +548,6 @@ jQuery(document).ready(function ($) {
 					if (response.success) {
 						show_toast('Feed saved successfully!');
 
-						// Use feed_id from server response (most accurate), then fall back to form data
 						let saved_id = response.data?.feed_id || form_data.get('client_feed_id') || form_data.get('edit_id');
 						let saved_name = response.data?.feed_name || null;
 						
@@ -538,38 +556,32 @@ jQuery(document).ready(function ($) {
 								socialfeedsData.existing_ids.push(saved_id);
 							}
 
-							if (!$('#socialfeeds-edit-id').length) {
-								form.append('<input type="hidden" name="edit_id" id="socialfeeds-edit-id" value="' + saved_id + '">');
+							let $edit_input = form.find('input[name="edit_id"]');
+							if (!$edit_input.length) {
+								form.append('<input type="hidden" name="edit_id" value="' + saved_id + '">');
 							} else {
-								$('#socialfeeds-edit-id').val(saved_id);
+								$edit_input.val(saved_id);
 							}
 
 							let url = new URL(window.location.href);
 							url.searchParams.set('edit_id', saved_id);
-
-							if(url.searchParams.get('action') === 'create'){
-								url.searchParams.set('action', 'edit');
-							}
-
+							if(url.searchParams.get('action') === 'create') url.searchParams.set('action', 'edit');
 							window.history.replaceState({}, '', url.toString());
 
-								form.find('.socialfeeds-save-name-btn').attr('data-feed-id', saved_id);
-								form.find('.socialfeeds-edit-name-btn').show();
-								let $text = $('.socialfeeds-feed-name-text');
-								let $input = $('.socialfeeds-feed-name-input');
-								
-								if(saved_name){
-									$text.text(saved_name);
-									$input.val(saved_name);
-								} else if ($text.length && $text.text().trim() === ''){
-									let platform = is_instagram ? 'instagram' : 'youtube';
-									let defaultName = 'Feed - ' + (platform === 'instagram' ? (form.find('input[name="feed_type"]').val() || 'username') : (form.find('select[name="feed_type"]').val() || 'channel')) + ' ' + saved_id;
-									$text.text(defaultName);
-									$input.val(defaultName);
-								}
-
+							form.find('.socialfeeds-save-name-btn').attr('data-feed-id', saved_id);
+							form.find('.socialfeeds-edit-name-btn').show();
+							let $text = $('.socialfeeds-feed-name-text');
+							let $input = $('.socialfeeds-feed-name-input');
+							
+							if(saved_name){
+								$text.text(saved_name);
+								$input.val(saved_name);
+							} else if ($text.length && $text.text().trim() === ''){
+								let defaultName = 'Feed - ' + (form.find('select[name="feed_type"]').val() || 'channel') + ' ' + saved_id;
+								$text.text(defaultName);
+								$input.val(defaultName);
+							}
 						}
-
 					} else {
 						show_toast(response.data.message || 'Error saving feed.', 'error');
 					}
@@ -583,18 +595,21 @@ jQuery(document).ready(function ($) {
 			});
 		});
 
-		$('#socialfeeds-wizard-form .socialfeeds-wizard-tab').on('click', function (e) {
+		$('.socialfeeds-wizard-tab').on('click', function (e) {
 			e.preventDefault();
 			let tab_name = $(this).data('tab');
+			let $form = $(this).closest('form');
 
 			if (tab_name === 'customize') {
-				fetch_preview('', false);
+				if ($form.attr('id') === 'socialfeeds-wizard-form') {
+					fetch_preview('', false);
+				}
 			}
 
-			$('.socialfeeds-wizard-tab-content').removeClass('active').hide();
-			$('.socialfeeds-wizard-tab').removeClass('active');
+			$form.find('.socialfeeds-wizard-tab-content').removeClass('active').hide();
+			$form.find('.socialfeeds-wizard-tab').removeClass('active');
 			$(this).addClass('active');
-			$('#socialfeeds-content-' + tab_name).addClass('active').show();
+			$form.find('#socialfeeds-content-' + tab_name).addClass('active').show();
 		});
 	}
 

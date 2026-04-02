@@ -11,11 +11,17 @@ class UI{
 	static function dashboard_tab(){
 		$youtube_opts = get_option('socialfeeds_youtube_option', []);
 		$insta_opts = get_option('socialfeeds_instagram_option', []);
+		$fb_opts = get_option('socialfeeds_facebook_option', []);
 		$cache_settings = get_option('socialfeeds_settings_option', []);
+		
 		$youtube_feeds = isset($youtube_opts['youtube_feeds']) ? $youtube_opts['youtube_feeds'] : [];
 		$instagram_feeds = isset($insta_opts['instagram_feeds']) ? $insta_opts['instagram_feeds'] : [];
+		$facebook_feeds = isset($fb_opts['facebook_feeds']) ? $fb_opts['facebook_feeds'] : [];
+		
 		$connected_accounts = isset($insta_opts['instagram_connected_accounts']) ? $insta_opts['instagram_connected_accounts'] : [];
-		$total_feeds_count = count($youtube_feeds) + count($instagram_feeds);
+		$facebook_connected_accounts = isset($fb_opts['facebook_connected_accounts']) ? $fb_opts['facebook_connected_accounts'] : [];
+		
+		$total_feeds_count = count($youtube_feeds) + count($instagram_feeds) + count($facebook_feeds);
 		$cache_duration = isset($cache_settings['cache_duration']) ? $cache_settings['cache_duration'] : HOUR_IN_SECONDS;
 		
 		echo '<div class="socialfeeds-dashboard-overview" style="display: flex; gap: 30px; align-items: flex-start;">
@@ -85,6 +91,41 @@ class UI{
 								echo'<button type="button" class="socialfeeds-btn-manage socialfeeds-instagram-settings">'.esc_html__('Manage Accounts', 'socialfeeds').'</button>';
 							}
 						echo'</div>
+
+						<!-- Facebook Card -->
+						<div class="socialfeeds-platform-card">
+							<div class="socialfeeds-p-card-header">
+								<div class="socialfeeds-p-card-icon facebook" style="background:#eff6ff; color:#2563eb;">
+									<span class="dashicons dashicons-facebook"></span>
+								</div>
+								' . (defined('SOCIALFEEDS_PRO_VERSION') ? '
+									<div class="socialfeeds-status-pill ' . (empty($facebook_connected_accounts) ? 'inactive' : '') . '">
+										<span class="socialfeeds-status-dot"></span>
+										' . (empty($facebook_connected_accounts) ? esc_html__('Pending Setup', 'socialfeeds') : esc_html__('Integrated', 'socialfeeds')) . '
+									</div>
+								' : '<span class="socialfeeds-pro-tag">PRO</span>') . '
+							</div>
+							<div class="socialfeeds-p-card-info">
+								<h3>'.esc_html__('Facebook Feed', 'socialfeeds').'</h3>
+								<p>'.esc_html__('Page Posts', 'socialfeeds').'</p>
+							</div>
+							<div class="socialfeeds-p-card-stats">
+								<div>
+									<div class="socialfeeds-stat-label">'.esc_html__('Feeds', 'socialfeeds').'</div>
+									<div class="socialfeeds-stat-value">'.esc_html(count($facebook_feeds)).'</div>
+								</div>
+								<div>
+									<div class="socialfeeds-stat-label">'.esc_html__('Accounts', 'socialfeeds').'</div>
+									<div class="socialfeeds-stat-value">'.esc_html(count($facebook_connected_accounts)).'</div>
+								</div>
+							</div>';
+							
+							if(!defined('SOCIALFEEDS_PRO_VERSION')){
+								echo '<a href="https://socialfeeds.org/pricing/" target="_blank" rel="noopener noreferrer" style="text-decoration:none;"><button type="button" style="width:100%;" class="socialfeeds-apikey-notice-btn">'.esc_html__('UPGRADE TO PRO', 'socialfeeds').'</button></a>';
+							} else{
+								echo'<button type="button" class="socialfeeds-btn-manage socialfeeds-facebook-settings">'.esc_html__('Manage Accounts', 'socialfeeds').'</button>';
+							}
+						echo'</div>
 					</div>
 
 					<!-- Quick Overview (Metrics) -->
@@ -103,7 +144,7 @@ class UI{
 						<div class="socialfeeds-metric-card" style="padding: 24px;">
 							<div class="socialfeeds-metric-info">
 								<div class="socialfeeds-stat-label">'.esc_html__('Connected Accounts', 'socialfeeds').'</div>
-								<div class="socialfeeds-stat-value">'.esc_html(count($connected_accounts)).'</div>
+								<div class="socialfeeds-stat-value">'.esc_html(count($connected_accounts) + count($facebook_connected_accounts)).'</div>
 							</div>
 							<div class="socialfeeds-metric-icon" style="background: #ecfdf5; color: #10b981;">
 								<span class="dashicons dashicons-admin-users"></span>
@@ -209,7 +250,16 @@ class UI{
 							$processed_instagram[] = $f;
 						}
 
-						$all_feeds = array_merge($processed_youtube, $processed_instagram);
+						$processed_facebook = [];
+						$fb_opts = get_option('socialfeeds_facebook_option', []);
+						$facebook_feeds = isset($fb_opts['facebook_feeds']) ? $fb_opts['facebook_feeds'] : [];
+						foreach($facebook_feeds as $f){
+							$f['_platform_key'] = 'facebook';
+							$f['_platform_label'] = 'Facebook';
+							$processed_facebook[] = $f;
+						}
+
+						$all_feeds = array_merge($processed_youtube, $processed_instagram, $processed_facebook);
 						
 						//Sort by index to show recent ones first
 						usort($all_feeds, ['\SocialFeeds\Settings\UI', 'sort_by_id']);
@@ -239,7 +289,7 @@ class UI{
 										</td>
 										<td>
 											<div class="socialfeeds-platform-tag">
-												<span class="dashicons dashicons-' . ($platform_key === "youtube" ? "youtube" : "instagram") . '"></span>
+												<span class="dashicons dashicons-' . ($platform_key === "youtube" ? "youtube" : ($platform_key === "facebook" ? "facebook" : "instagram")) . '"></span>
 												' . esc_html($platform_label) . '
 											</div>
 										</td>
@@ -545,9 +595,8 @@ class UI{
 		</div>';
 		echo '<div class="socialfeeds-customize-columns">
 			<div class="socialfeeds-customize-preview-column">
-				<div class="socialfeeds-button-group justify-content-left" style="margin-bottom: 15px; margin-top: 0;">
+				<div class="socialfeeds-button-group" style="margin-bottom: 15px; margin-top: 0; display: flex; justify-content: flex-end; gap: 10px;">
 					<a href="'.esc_url(admin_url('admin.php?page=socialfeeds#feeds')).'" class="button button-primary">'.esc_html__('All Feeds', 'socialfeeds').'</a>
-					<div class="socialfeeds-spacer"></div>
 					<button type="submit" name="socialfeeds_save" class="button button-primary" id="socialfeeds-save-btn">'.esc_html__('Save', 'socialfeeds').'</button>
 				</div>
 
