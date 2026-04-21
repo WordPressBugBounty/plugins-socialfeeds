@@ -64,6 +64,13 @@ jQuery(document).ready(function ($) {
 
 		let $tab = $('#socialfeeds-' + hash);
 		if (!$tab.length) {
+			// support direct Google Reviews wizard URLs
+			if (hash === 'google-reviews' || hash === 'google_reviews') {
+				hash = 'google';
+				$tab = $('#socialfeeds-google');
+			}
+		}
+		if (!$tab || !$tab.length) {
 			// fallback to dashboard if hash unknown
 			hash = 'dashboard';
 			$tab = $('#socialfeeds-dashboard');
@@ -345,6 +352,14 @@ jQuery(document).ready(function ($) {
 			$modal.addClass('active').css({ display: 'flex', visibility: 'visible', opacity: 0 }).stop().animate({ opacity: 1 }, 200);
 		});
 
+		$('.socialfeeds-google-settings').on('click', function (e){
+			e.preventDefault();
+			let $modal = $('#socialfeeds-google-connection-modal');
+			if (!$modal.length) return;
+			if (!$modal.parent().is('body')) $modal.appendTo(document.body);
+			$modal.addClass('active').css({ display: 'flex', visibility: 'visible', opacity: 0 }).stop().animate({ opacity: 1 }, 200);
+		});
+
 		$('.socialfeeds-settings-btn').on('click', function (e) {
 			e.preventDefault();
 			let page_name = $(this).data('page'),
@@ -443,7 +458,7 @@ jQuery(document).ready(function ($) {
 			try { $('#socialfeeds-content-customize')[0].scrollIntoView({ behavior: 'smooth', block: 'start' }); } catch (e) { }
 		});
 
-		if ($('#socialfeeds-wizard-form, #socialfeeds-instagram-wizard-form').length > 0) {
+		if ($('#socialfeeds-wizard-form, #socialfeeds-instagram-wizard-form, #socialfeeds-facebook-wizard-form, #socialfeeds-google-wizard-form').length > 0) {
 			re_initialize_form_handlers();
 		}
 		init_dynamic_ui();
@@ -471,7 +486,7 @@ jQuery(document).ready(function ($) {
 	activate_tab_from_url();
 
 	function re_initialize_form_handlers() {
-		let $forms = $('#socialfeeds-wizard-form, #socialfeeds-instagram-wizard-form, #socialfeeds-facebook-wizard-form');
+		let $forms = $('#socialfeeds-wizard-form, #socialfeeds-instagram-wizard-form, #socialfeeds-facebook-wizard-form, #socialfeeds-google-wizard-form');
 		
 		$forms.each(function() {
 			let $form = $(this);
@@ -482,6 +497,8 @@ jQuery(document).ready(function ($) {
 				platform = 'instagram';
 			} else if (form_id.indexOf('facebook') !== -1) {
 				platform = 'facebook';
+			} else if (form_id.indexOf('google') !== -1) {
+				platform = 'google_reviews';
 			}
 
 			// handle edit icon visibility based on edit mode vs new feed

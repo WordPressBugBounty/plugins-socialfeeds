@@ -4,7 +4,7 @@ Tags: social feeds, instagram feed, youtube feed, social media, youtube videos
 Requires at least: 5.0
 Tested up to: 7.0
 Requires PHP: 7.2
-Stable tag: 1.0.6
+Stable tag: 1.0.7
 License: GPLv2
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -119,11 +119,15 @@ Install SocialFeeds today to display your Instagram photos and YouTube videos on
 
 == Changelog ==
 
-= 1.0.6
+= 1.0.7 =
+
+* [Pro-Feature] Added Google Reviews integration.
+
+= 1.0.6 =
 
 * [Pro-Feature] Added Facebook feed integration.
 
-= 1.0.5
+= 1.0.5 =
 
 * [Pro-Feature] Added support for hashtag posts and hashtag posts for Instagram.
 

@@ -18,13 +18,15 @@ class Shortcodes{
 		
 		$platform = strtolower(trim($extracted['platform']));
 		$id = trim($extracted['id']);
+		// Also support 'feed' as index/id alternative for consistency with YouTube behavior
+		$feed_index = isset($atts['feed']) ? trim($atts['feed']) : '';
 		
 		if(empty($platform)){
-			return '<p class="socialfeeds-subtitle">' . esc_html__('Platform attribute is required. Use platform="youtube", "instagram" or "facebook".', 'socialfeeds') . '</p>';
+			return '<p class="socialfeeds-subtitle">' . esc_html__('Platform attribute is required. Use platform="youtube", "instagram", "facebook" or "google_reviews".', 'socialfeeds') . '</p>';
 		}
 		
-		if(empty($id)){
-			return '<p class="socialfeeds-subtitle">' . esc_html__('ID attribute is required.', 'socialfeeds') . '</p>';
+		if(empty($id) && empty($feed_index)){
+			return '<p class="socialfeeds-subtitle">' . esc_html__('ID or Feed attribute is required.', 'socialfeeds') . '</p>';
 		}
 		
 		// Route to appropriate platform handler, passing ALL attributes
@@ -38,8 +40,12 @@ class Shortcodes{
 			if(class_exists('\SocialFeedsPro\ShortcodeRender') && defined('SOCIALFEEDS_PRO_VERSION')){
 				return \SocialFeedsPro\ShortcodeRender::facebook_feed($atts);
 			}
+		} elseif($platform === 'google_reviews'){
+			if(class_exists('\SocialFeedsPro\ShortcodeRender') && defined('SOCIALFEEDS_PRO_VERSION')){
+				return \SocialFeedsPro\ShortcodeRender::google_reviews($atts);
+			}
 		} else {
-			return '<p class="socialfeeds-subtitle">' . esc_html__('Invalid platform. Use platform="youtube", "instagram" or "facebook".', 'socialfeeds') . '</p>';
+			return '<p class="socialfeeds-subtitle">' . esc_html__('Invalid platform. Use platform="youtube", "instagram", "facebook" or "google_reviews".', 'socialfeeds') . '</p>';
 		}
 	}
 

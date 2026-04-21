@@ -12,16 +12,19 @@ class UI{
 		$youtube_opts = get_option('socialfeeds_youtube_option', []);
 		$insta_opts = get_option('socialfeeds_instagram_option', []);
 		$fb_opts = get_option('socialfeeds_facebook_option', []);
+		$google_opts = get_option('socialfeeds_google_option', []);
 		$cache_settings = get_option('socialfeeds_settings_option', []);
 		
 		$youtube_feeds = isset($youtube_opts['youtube_feeds']) ? $youtube_opts['youtube_feeds'] : [];
 		$instagram_feeds = isset($insta_opts['instagram_feeds']) ? $insta_opts['instagram_feeds'] : [];
 		$facebook_feeds = isset($fb_opts['facebook_feeds']) ? $fb_opts['facebook_feeds'] : [];
-		
+		$google_feeds = isset($google_opts['google_reviews_feeds']) ? $google_opts['google_reviews_feeds'] : [];
+
 		$connected_accounts = isset($insta_opts['instagram_connected_accounts']) ? $insta_opts['instagram_connected_accounts'] : [];
 		$facebook_connected_accounts = isset($fb_opts['facebook_connected_accounts']) ? $fb_opts['facebook_connected_accounts'] : [];
-		
-		$total_feeds_count = count($youtube_feeds) + count($instagram_feeds) + count($facebook_feeds);
+		$google_connected_accounts = isset($google_opts['google_connected_accounts']) ? $google_opts['google_connected_accounts'] : [];
+
+		$total_feeds_count = count($youtube_feeds) + count($instagram_feeds) + count($facebook_feeds) + count($google_feeds);
 		$cache_duration = isset($cache_settings['cache_duration']) ? $cache_settings['cache_duration'] : HOUR_IN_SECONDS;
 		
 		echo '<div class="socialfeeds-dashboard-overview" style="display: flex; gap: 30px; align-items: flex-start;">
@@ -126,6 +129,42 @@ class UI{
 								echo'<button type="button" class="socialfeeds-btn-manage socialfeeds-facebook-settings">'.esc_html__('Manage Accounts', 'socialfeeds').'</button>';
 							}
 						echo'</div>
+
+						<!-- Google Reviews Card -->
+						<div class="socialfeeds-platform-card">
+							<div class="socialfeeds-p-card-header">
+								<div class="socialfeeds-p-card-icon google" style="background:#eff6ff; color:#2563eb;">
+									<span class="dashicons dashicons-google"></span>
+								</div>
+								' . (defined('SOCIALFEEDS_PRO_VERSION') ? '
+									<div class="socialfeeds-status-pill ' . (empty($google_connected_accounts) ? 'inactive' : '') . '">
+										<span class="socialfeeds-status-dot"></span>
+										' . (empty($google_connected_accounts) ? esc_html__('Pending Setup', 'socialfeeds') : esc_html__('Integrated', 'socialfeeds')) . '
+									</div>
+								' : '<span class="socialfeeds-pro-tag">PRO</span>') . '
+							</div>
+							<div class="socialfeeds-p-card-info">
+								<h3>'.esc_html__('Google Reviews', 'socialfeeds').'</h3>
+								<p>'.esc_html__('Business Reviews', 'socialfeeds').'</p>
+							</div>
+							<div class="socialfeeds-p-card-stats">
+								<div>
+									<div class="socialfeeds-stat-label">'.esc_html__('Feeds', 'socialfeeds').'</div>
+									<div class="socialfeeds-stat-value">'.esc_html(count($google_feeds)).'</div>
+								</div>
+								<div>
+									<div class="socialfeeds-stat-label">'.esc_html__('Places', 'socialfeeds').'</div>
+									<div class="socialfeeds-stat-value">'.esc_html(count($google_connected_accounts)).'</div>
+								</div>
+							</div>';
+							
+							if(!defined('SOCIALFEEDS_PRO_VERSION')){
+								echo '<a href="https://socialfeeds.org/pricing/" target="_blank" rel="noopener noreferrer" style="text-decoration:none;"><button type="button" style="width:100%;" class="socialfeeds-apikey-notice-btn">'.esc_html__('UPGRADE TO PRO', 'socialfeeds').'</button></a>';
+							} else{
+								echo'<button type="button" class="socialfeeds-btn-manage socialfeeds-google-settings">'.esc_html__('Manage Places', 'socialfeeds').'</button>';
+							}
+						echo'</div>
+
 					</div>
 
 					<!-- Quick Overview (Metrics) -->
@@ -144,7 +183,7 @@ class UI{
 						<div class="socialfeeds-metric-card" style="padding: 24px;">
 							<div class="socialfeeds-metric-info">
 								<div class="socialfeeds-stat-label">'.esc_html__('Connected Accounts', 'socialfeeds').'</div>
-								<div class="socialfeeds-stat-value">'.esc_html(count($connected_accounts) + count($facebook_connected_accounts)).'</div>
+								<div class="socialfeeds-stat-value">'.esc_html(count($connected_accounts) + count($facebook_connected_accounts) + count($google_connected_accounts)).'</div>
 							</div>
 							<div class="socialfeeds-metric-icon" style="background: #ecfdf5; color: #10b981;">
 								<span class="dashicons dashicons-admin-users"></span>
@@ -215,8 +254,10 @@ class UI{
 	static function settings_tab(){
 		$youtube_opts = get_option('socialfeeds_youtube_option', []);
 		$insta_opts = get_option('socialfeeds_instagram_option', []);
+		$google_opts = get_option('socialfeeds_google_option', []);
 		$youtube_feeds = isset($youtube_opts['youtube_feeds']) ? $youtube_opts['youtube_feeds'] : [];
 		$instagram_feeds = isset($insta_opts['instagram_feeds']) ? $insta_opts['instagram_feeds'] : [];
+		$google_feeds = isset($google_opts['google_reviews_feeds']) ? $google_opts['google_reviews_feeds'] : [];
 
 		echo '<div class="socialfeeds-wizard-container">
 		<div class="socialfeeds-settings-container">
@@ -259,7 +300,14 @@ class UI{
 							$processed_facebook[] = $f;
 						}
 
-						$all_feeds = array_merge($processed_youtube, $processed_instagram, $processed_facebook);
+						$processed_google = [];
+						foreach($google_feeds as $f){
+							$f['_platform_key'] = 'google_reviews';
+							$f['_platform_label'] = 'Google Reviews';
+							$processed_google[] = $f;
+						}
+
+						$all_feeds = array_merge($processed_youtube, $processed_instagram, $processed_facebook, $processed_google);
 						
 						//Sort by index to show recent ones first
 						usort($all_feeds, ['\SocialFeeds\Settings\UI', 'sort_by_id']);
@@ -289,7 +337,7 @@ class UI{
 										</td>
 										<td>
 											<div class="socialfeeds-platform-tag">
-												<span class="dashicons dashicons-' . ($platform_key === "youtube" ? "youtube" : ($platform_key === "facebook" ? "facebook" : "instagram")) . '"></span>
+												<span class="dashicons dashicons-' . ($platform_key === "youtube" ? "youtube" : ($platform_key === "facebook" ? "facebook" : ($platform_key === "google_reviews" ? "google" : "instagram"))) . '"></span>
 												' . esc_html($platform_label) . '
 											</div>
 										</td>

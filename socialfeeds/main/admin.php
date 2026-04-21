@@ -51,6 +51,14 @@ class Admin{
 			}
 		echo '</div>';
 
+		echo '<div id="socialfeeds-google" class="socialfeeds-tab-content" style="display:none;">';
+			if(defined('SOCIALFEEDS_PRO_VERSION')){
+				do_action('socialfeeds_render_google_reviews_page');
+			} else {
+				self::pro_placeholder_page();
+			}
+		echo '</div>';
+
 		echo '<div id="socialfeeds-feeds" class="socialfeeds-tab-content" style="display:none;">';
 			\SocialFeeds\Settings\UI::settings_tab();
 		echo '</div>';
@@ -75,6 +83,7 @@ class Admin{
 			'youtube' => ['label' => 'YouTube', 'icon' => 'youtube'],
 			'instagram' => ['label' => 'Instagram', 'icon' => 'instagram', 'pro' => true],
 			'facebook' => ['label' => 'Facebook', 'icon' => 'facebook', 'pro' => true],
+			'google' => ['label' => 'Google Reviews', 'icon' => 'google', 'pro' => true],
 			'feeds' => ['label' => 'Feeds', 'icon' => 'admin-settings'],
 			'support' => ['label' => 'Support', 'icon' => 'sos'],
 		];
@@ -170,6 +179,11 @@ class Admin{
 		$fb_feeds = isset($facebook_opts['facebook_feeds']) ? $facebook_opts['facebook_feeds'] : [];
 		$fb_ids = array_column($fb_feeds, 'id');
 		$feed_ids = array_merge($feed_ids, $fb_ids);
+
+		$google_opts = get_option('socialfeeds_google_option', []);
+		$google_feeds = isset($google_opts['google_reviews_feeds']) ? $google_opts['google_reviews_feeds'] : [];
+		$google_ids = array_column($google_feeds, 'id');
+		$feed_ids = array_merge($feed_ids, $google_ids);
 
 		// Get global ID counter
 		$global_counter = get_option('socialfeeds_global_id_counter', 0);

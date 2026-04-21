@@ -156,6 +156,15 @@ class Ajax{
 								$all_existing_ids[] = intval($f['id']);
 							}
 						}
+
+						//google reviews IDs
+						$google_opts = get_option('socialfeeds_google_option', []);
+						$google_feeds = isset($google_opts['google_reviews_feeds']) ? $google_opts['google_reviews_feeds'] : [];
+						foreach($google_feeds as $f){
+							if(isset($f['id'])){
+								$all_existing_ids[] = intval($f['id']);
+							}
+						}
 					
 						// Find next available ID
 						// If no feeds exist, start from 1 and reset counter
@@ -381,6 +390,9 @@ class Ajax{
 		} elseif($platform === 'facebook'){
 			$opts = get_option('socialfeeds_facebook_option', []);
 			$key = 'facebook_feeds';
+		} elseif ($platform === 'google_reviews') {
+			$opts = get_option('socialfeeds_google_option', []);
+			$key = 'google_reviews_feeds';
 		} else {
 			$opts = get_option('socialfeeds_youtube_option', []);
 			$key = 'youtube_feeds';
@@ -403,6 +415,8 @@ class Ajax{
 				update_option('socialfeeds_instagram_option', $opts);
 			} elseif($platform === 'facebook'){
 				update_option('socialfeeds_facebook_option', $opts);
+			} elseif ($platform === 'google_reviews') {
+				update_option('socialfeeds_google_option', $opts);
 			} else {
 				update_option('socialfeeds_youtube_option', $opts);
 			}
