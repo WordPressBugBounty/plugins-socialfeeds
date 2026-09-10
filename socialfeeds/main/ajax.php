@@ -34,7 +34,7 @@ class Ajax{
 		
 		// 1. YouTube API Key
 		if(isset($_POST['youtube_api_key'])){
-			$youtube_opts['youtube_api_key'] = !empty($_POST['youtube_api_key']) ? sanitize_text_field(wp_unslash($_POST['youtube_api_key'])) : '';
+			$youtube_opts['youtube_api_key'] = !empty($_POST['youtube_api_key']) ? \SocialFeeds\Util::encrypt_credential(sanitize_text_field(wp_unslash($_POST['youtube_api_key']))) : '';
 		}
 
 		// 2. Wizard Feed Save
@@ -248,7 +248,7 @@ class Ajax{
 		$page_token = isset($_POST['pageToken']) ? sanitize_text_field(wp_unslash($_POST['pageToken'])) : '';
 
 		$option = get_option('socialfeeds_youtube_option', []);
-		$api_key = !empty($option['youtube_api_key']) ? $option['youtube_api_key'] : '';
+		$api_key = \SocialFeeds\Util::get_youtube_api_key($option);
 
 		$per_page = isset($_POST['youtube_videos_per_page']) ? absint(wp_unslash($_POST['youtube_videos_per_page'])) : 6;
 		$per_page = max(1, min(50, $per_page));
@@ -311,12 +311,12 @@ class Ajax{
 					
 					$snippet = isset($it['snippet']) ? $it['snippet'] : [];
 					$items[] = array(
-						'videoId' => isset($it['id']['videoId']) ? $it['id']['videoId'] : '',
-						'title' => isset($snippet['title']) ? $snippet['title'] : '',
-						'description' => isset($snippet['description']) ? $snippet['description'] : '',
-						'thumbnails' => isset($snippet['thumbnails']) ? $snippet['thumbnails'] : [],
-						'channelTitle' => isset($snippet['channelTitle']) ? $snippet['channelTitle'] : (isset($snippet['videoOwnerChannelTitle']) ? $snippet['videoOwnerChannelTitle'] : ''),
-						'channelId'	=> isset($snippet['channelId']) ? $snippet['channelId'] : (isset($snippet['videoOwnerChannelId']) ? $snippet['videoOwnerChannelId'] : ''),
+						'videoId' => isset($it['id']['videoId']) ? sanitize_text_field($it['id']['videoId']) : '',
+						'title' => isset($snippet['title']) ? sanitize_text_field($snippet['title']) : '',
+						'description' => isset($snippet['description']) ? sanitize_textarea_field($snippet['description']) : '',
+						'thumbnails' => isset($snippet['thumbnails']) ? \SocialFeeds\Util::sanitize_thumbnails($snippet['thumbnails']) : [],
+						'channelTitle' => isset($snippet['channelTitle']) ? sanitize_text_field($snippet['channelTitle']) : (isset($snippet['videoOwnerChannelTitle']) ? sanitize_text_field($snippet['videoOwnerChannelTitle']) : ''),
+						'channelId'	=> isset($snippet['channelId']) ? sanitize_text_field($snippet['channelId']) : (isset($snippet['videoOwnerChannelId']) ? sanitize_text_field($snippet['videoOwnerChannelId']) : ''),
 					);
 				}
 			}
@@ -355,19 +355,19 @@ class Ajax{
 
 			if(!empty($snippet)){
 				$subscriber_count = isset($body['items'][0]['statistics']['subscriberCount']) ?  $body['items'][0]['statistics']['subscriberCount'] : 0;
-				$channel_info = array(
+				$channel_info = \SocialFeeds\Util::sanitize_channel_info(array(
 					'id' => $preview_channel_id,
 					'title'	=> isset($snippet['title']) ? $snippet['title'] : '',
 					'thumbnail' => isset($snippet['thumbnails']['default']['url']) ? $snippet['thumbnails']['default']['url'] : '',
 					'description' => isset($snippet['description']) ? $snippet['description'] : '',
 					'bannerExternalUrl' => isset($body['items'][0]['brandingSettings']['image']['bannerExternalUrl']) ? $body['items'][0]['brandingSettings']['image']['bannerExternalUrl'] : '',
 					'subscriberCount' => $subscriber_count,
-				);
+				));
 			}
 		}
 
 		wp_send_json_success([
-			'items' => $items,
+			'items' => \SocialFeeds\Util::sanitize_preview_items($items),
 			'nextPageToken' => $next_page_token,
 			'channel' => $channel_info,
 		]);
@@ -431,15 +431,44 @@ class Ajax{
 		
 		check_ajax_referer('socialfeeds_frontend_nonce', 'nonce');
 
+		// RATE LIMIT 
+		$client_ip = !empty($_SERVER['REMOTE_ADDR']) ? sanitize_text_field(wp_unslash($_SERVER['REMOTE_ADDR'])) : '';
+
+		if(!empty($_SERVER['HTTP_CF_CONNECTING_IP']) && filter_var($_SERVER['HTTP_CF_CONNECTING_IP'], FILTER_VALIDATE_IP)){
+			$client_ip = sanitize_text_field(wp_unslash($_SERVER['HTTP_CF_CONNECTING_IP']));
+		}
+
+		$ip_hash = !empty($client_ip) && filter_var($client_ip, FILTER_VALIDATE_IP) ? md5($client_ip) : '';
+
+		if (!empty($ip_hash)) {
+			// Check temporary ban
+			if (get_transient('sf_ban_' . $ip_hash)) {
+				wp_send_json_error(__('Access temporarily suspended due to suspicious activity. Please try again later.', 'socialfeeds'), 429);
+			}
+
+			// Limit: Max 20 requests per minute (60 seconds)
+			$rate_key = 'sf_rate_' . $ip_hash;
+			$request_count = (int) get_transient($rate_key);
+
+			if ($request_count >= 20) {
+				// Ban the IP for 5 minutes (300 seconds)
+				set_transient('sf_ban_' . $ip_hash, true, 300);
+				delete_transient($rate_key);
+				wp_send_json_error(__('Too many requests. Please slow down and try again in 5 minutes.', 'socialfeeds'), 429);
+			}
+
+			// Increment count
+			set_transient($rate_key, $request_count + 1, 60);
+		}
+		// --------------------------------------------------
+
 		$feed_id = isset($_POST['feed_id']) ? sanitize_text_field(wp_unslash($_POST['feed_id'])) : '';
-		$feed_type = isset($_POST['feed_type']) ? sanitize_text_field(wp_unslash($_POST['feed_type'])) : '';
-		$feed_input = isset($_POST['feed_input']) ? sanitize_text_field(wp_unslash($_POST['feed_input'])) : '';
 		$limit = isset($_POST['limit']) ? absint(wp_unslash($_POST['limit'])) : 12;
 		$pageToken = isset($_POST['pageToken']) ? sanitize_text_field(wp_unslash($_POST['pageToken'])) : '';
 		$opts_global = get_option('socialfeeds_youtube_option', []);
 		$feed_settings = [];
 		$settings_opts = get_option('socialfeeds_settings_option', []);
-		$cache_duration = !empty($settings_opts['cache']['duration']) ? absint($settings_opts['cache']['duration']) : '3600';
+		$cache_duration = !empty($settings_opts['cache']['duration']) ? absint($settings_opts['cache']['duration']) : 3600;
 
 		// If feed_id is provided, fetch settings from database
 		if ($feed_id) {
@@ -453,8 +482,8 @@ class Ajax{
 			}
 
 			if ($found_feed) {
-				$feed_type = isset($found_feed['type']) ? $found_feed['type'] : $feed_type;
-				$feed_input = isset($found_feed['input']) ? $found_feed['input'] : $feed_input;
+				$feed_type = isset($found_feed['type']) ? $found_feed['type'] : '';
+				$feed_input = isset($found_feed['input']) ? $found_feed['input'] : '';
 				$feed_settings = isset($found_feed['settings']) ? $found_feed['settings'] : [];
 				$limit = isset($feed_settings['youtube_load_more_count']) ? intval($feed_settings['youtube_load_more_count']) : $limit;
 			}
@@ -462,11 +491,20 @@ class Ajax{
 
 		$opts = array_merge($opts_global, $feed_settings);
 
-		$api_key = isset($opts_global['youtube_api_key']) ? $opts_global['youtube_api_key'] : '';
+		$api_key = \SocialFeeds\Util::get_youtube_api_key($opts_global);
 
 		if(empty($feed_type) || empty($api_key)){
-			wp_send_json_error(__('Missing required parameters', 'socialfeeds'));
+			wp_send_json_error(__('Missing required parameters', 'socialfeeds'), 400);
 		}
+
+		// ---------------- CACHE CHECK ----------------
+		$cache_key = 'sf_yt_' . md5($feed_type . '_' . $feed_input . '_' . $limit . '_' . $pageToken);
+		$cached_response = get_transient($cache_key);
+
+		if (false !== $cached_response) {
+			wp_send_json_success($cached_response);
+		}
+		// ---------------------------------------------
 
 		$items = [];
 		$nextPageToken = '';
@@ -500,7 +538,7 @@ class Ajax{
 			$body = self::fetch_url($url);
 			
 			$nextPageToken = isset($body['nextPageToken']) ? $body['nextPageToken'] : '';
-			$items = self::extract_videos($body['items']);
+			$items = self::extract_videos($body['items'] ?? []);
 			
 			// Enrich with statistics/details if filter available (e.g. Pro or custom)
 			if(!empty($items)){
@@ -514,7 +552,7 @@ class Ajax{
 
 		} else {
 			// PRO
-			do_action('socialfeeds_youtube_load_more_pro', $feed_type, $feed_input, $api_key, $limit, $pageToken, '\SocialFeeds\Ajax::extract_videos');
+			do_action('socialfeeds_youtube_load_more_pro', $feed_type, $feed_input, $api_key, $limit, $pageToken, '\SocialFeeds\Ajax::extract_videos', $opts);
 			/* translators: %s: requires the Pro*/
 			wp_send_json_error(sprintf(__('Loading more for %s requires the Pro version.', 'socialfeeds'), $feed_type));
 		}
@@ -523,6 +561,12 @@ class Ajax{
 		if(!empty($response_data['items']) && class_exists('\SocialFeeds\Shortcodes')){
 			$response_data['html'] = \SocialFeeds\Shortcodes::render_items($response_data['items'], $opts);
 		}
+
+		// ---------------- SAVE TO CACHE ----------------
+		if (!empty($response_data['items']) && $cache_duration > 0) {
+			set_transient($cache_key, $response_data, $cache_duration);
+		}
+		// -----------------------------------------------
 
 		wp_send_json_success($response_data);
 	}
@@ -586,10 +630,10 @@ class Ajax{
 			}
 
 			$videos[] = [
-				'videoId' => $vid,
-				'title' => isset($snippet['title']) ? $snippet['title'] : '',
-				'description' => isset($snippet['description']) ? $snippet['description'] : '',
-				'thumbnails' => isset($snippet['thumbnails']) ? $snippet['thumbnails'] : [],
+				'videoId' => sanitize_text_field($vid),
+				'title' => isset($snippet['title']) ? sanitize_text_field($snippet['title']) : '',
+				'description' => isset($snippet['description']) ? sanitize_textarea_field($snippet['description']) : '',
+				'thumbnails' => isset($snippet['thumbnails']) ? \SocialFeeds\Util::sanitize_thumbnails($snippet['thumbnails']) : [],
 			];
 		}
 		return $videos;
@@ -617,7 +661,7 @@ class Ajax{
 		}
 
 		$youtube_opts = get_option('socialfeeds_youtube_option', []);
-		$api_key = isset($youtube_opts['youtube_api_key']) ? $youtube_opts['youtube_api_key'] : '';
+		$api_key = \SocialFeeds\Util::get_youtube_api_key($youtube_opts);
 		$feeds = isset($youtube_opts['youtube_feeds']) ? $youtube_opts['youtube_feeds'] : [];
 
 		foreach($feeds as $feed){
@@ -713,7 +757,11 @@ class Ajax{
 		$options[$feeds_key] = $feeds;
 		update_option($option_key, $options);
 
-		wp_send_json_success(['message' => esc_html__('Feed name updated', 'socialfeeds')]);
+		wp_send_json_success([
+			'message' => esc_html__('Feed name updated', 'socialfeeds'),
+			'name' => $name,
+			'feed_id' => $feed_id,
+		]);
 	}
 
 }

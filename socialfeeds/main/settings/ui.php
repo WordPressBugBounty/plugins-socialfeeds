@@ -236,7 +236,7 @@ class UI{
 						<div class="socialfeeds-modal-form-group">
 							<label for="socialfeeds-modal-api-key">' . esc_html__('YouTube API Key', 'socialfeeds') . '</label>
 							<input name="youtube_api_key" type="text" id="socialfeeds-modal-api-key"
-								value="' . esc_attr(isset($youtube_opts['youtube_api_key']) ? $youtube_opts['youtube_api_key'] : '') . '"
+								value="' . esc_attr(\SocialFeeds\Util::get_youtube_api_key($youtube_opts)) . '"
 								class="regular-text socialfeeds-api-input"
 								placeholder="' . esc_attr__('Enter your YouTube API key', 'socialfeeds') . '" />
 							<p class="description">' . esc_html__('Get your API key from Google Cloud Console', 'socialfeeds') . '</p>

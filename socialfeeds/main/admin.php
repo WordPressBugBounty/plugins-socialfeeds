@@ -118,7 +118,7 @@ class Admin{
 	static function render_youtube_page(){
 		global $socialfeeds;
 
-		$youtube_key = !empty($socialfeeds->youtube_settings['youtube_api_key']) ? $socialfeeds->youtube_settings['youtube_api_key'] : '';
+		$youtube_key = \SocialFeeds\Util::get_youtube_api_key($socialfeeds->youtube_settings);
 
 		if(empty($youtube_key)){
 			echo '<div class="socialfeeds-apikey-notice">

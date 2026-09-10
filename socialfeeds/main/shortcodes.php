@@ -86,7 +86,7 @@ class Shortcodes{
 		}
 		$feed_settings = isset($feed['settings']) ? $feed['settings'] : [];
 		$opts = array_merge($opts_global, $feed_settings);
-		$api_key = isset($opts['youtube_api_key']) ? $opts['youtube_api_key'] : '';
+		$api_key = \SocialFeeds\Util::get_youtube_api_key($opts);
 		
 		if(empty($api_key))
 			return '<p class="socialfeeds-subtitle">'.esc_html__('No YouTube API key configured.', 'socialfeeds') . '</p>';
@@ -679,11 +679,11 @@ class Shortcodes{
 			$inner_content = "<div class='socialfeeds-card-media' style='position:relative; overflow:hidden;'>";
 			$inner_content .= "<a href='" . esc_url($watch_url) . "' target='_blank' rel='noopener' class='socialfeeds-media-link' style='display:block; position:relative;'>";
 
+			$thumb_tag = "<img src='".esc_url($thumb)."' alt='".esc_attr($title)."' style='width:100%; display:block;'";
 			if(!empty($lazy_load)){
-				$inner_content .= "<img loading='lazy' src='".($thumb)."' alt='".esc_attr($title)."' style='width:100%; display:block;'/>";
-			} else {
-				$inner_content .= "<img src='".esc_url($thumb)."' alt='".esc_attr($title)."' style='width:100%; display:block;'/>";
+				$thumb_tag .= " loading='lazy'";
 			}
+			$inner_content .= $thumb_tag . "/>";
 
 			$duration = isset($item['contentDetails']['duration']) ? $item['contentDetails']['duration'] : (isset($item['duration']) ? $item['duration'] : '');
 

@@ -4,6 +4,35 @@ jQuery(document).ready(function ($) {
 	socialfeeds_preview_device = 'desktop',
 	selected_type = null;
 
+	function escape_html(str) {
+		if (str === null || str === undefined) {
+			return '';
+		}
+		return $('<div>').text(String(str)).html();
+	}
+
+	function escape_attr(str) {
+		return escape_html(str).replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+	}
+
+  function safe_url(url) {
+    if (!url) {
+    	return '';
+    }
+
+    let parsed = new URL(String(url), window.location.origin);
+
+    if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+    	return '';
+    }
+
+    return parsed.href;
+  }
+
+	function escape_url(url) {
+		return escape_attr(safe_url(url));
+	}
+
 	$('#socialfeeds-youtube-videos-per-page').on('input', function () {
 		let value = parseInt($(this).val(), 10);
 
@@ -21,7 +50,7 @@ jQuery(document).ready(function ($) {
 		let toast = $('<div>')
 			.addClass('socialfeeds-toast socialfeeds-toast') // site-seo compat
 			.addClass(type)
-			.html(`<span class="dashicons dashicons-yes"></span> ${message}`);
+			.html('<span class="dashicons dashicons-yes"></span> ' + escape_html(message));
 
 		$('body').append(toast);
 
@@ -714,7 +743,7 @@ jQuery(document).ready(function ($) {
 						preview_grid.html(
 							'<div class="socialfeeds-error-notice" style="text-align:center; padding:20px; color:#d63638; max-width: 80%;">' +
 							'<span class="dashicons dashicons-warning" style="font-size:48px; width:48px; height:48px; display:block; margin:0 auto 15px;"></span>' +
-							'<h3 style="margin:0 0 10px; font-size:18px;">' + msg + '</h3>' +
+							'<h3 style="margin:0 0 10px; font-size:18px;">' + escape_html(msg) + '</h3>' +
 							'<p style="font-size:14px; margin:0; color:#646970;">Please check that the entered ID or Username is correct.</p>' +
 							'</div>'
 						);
@@ -774,8 +803,8 @@ jQuery(document).ready(function ($) {
 		let $item = $('<div class="socialfeeds-preview-item">')
 			.attr('data-video-id', video_id)
 			.attr('data-channel-id', snippet.channelId || '')
-			.append($('<img class="socialfeeds-preview-thumbnail">').attr('src', thumb))
-			.append($('<div class="socialfeeds-preview-title">').text(snippet.title))
+			.append($('<img class="socialfeeds-preview-thumbnail">').attr('src', safe_url(thumb) || ''))
+			.append($('<div class="socialfeeds-preview-title">').text(snippet.title || ''))
 			.append($('<div class="socialfeeds-preview-desc">').text((snippet.description || '').substring(0, 60) + ((snippet.description && snippet.description.length > 60) ? '...' : '')).hide());
 
 		if (duration) $item.attr('data-duration', duration);
@@ -816,7 +845,7 @@ jQuery(document).ready(function ($) {
 					<div class="socialfeeds-admin-backdrop"></div>
 					<div class="socialfeeds-admin-modal-inner">
 						<button class="socialfeeds-admin-close">&times;</button>
-						<iframe width="100%" height="100%" src="https://www.youtube.com/embed/${video_id}?autoplay=1&rel=0" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+						<iframe width="100%" height="100%" src="https://www.youtube.com/embed/${encodeURIComponent(video_id)}?autoplay=1&rel=0" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
 					</div>
 				</div>`;
 
@@ -868,7 +897,7 @@ jQuery(document).ready(function ($) {
 
 			$thumb.html(`
 			<iframe
-				src="https://www.youtube.com/embed/${video_id}?autoplay=1&mute=1&rel=0&playsinline=1"
+				src="https://www.youtube.com/embed/${encodeURIComponent(video_id)}?autoplay=1&mute=1&rel=0&playsinline=1"
 				frameborder="0"
 				allow="autoplay; encrypted-media"
 				allowfullscreen
@@ -915,10 +944,10 @@ jQuery(document).ready(function ($) {
 
 		let text_color = is_dark ? '#ffffff' : '#1d2327',
 		desc_color = is_dark ? '#cccccc' : '#646970',
-		custom_text = $('#socialfeeds-youtube-header-text').val()?.trim(),
-		title = channel.title || channel.snippet?.title || '',
-		description = channel.description || channel.snippet?.description || '',
-		thumbnail = channel.thumbnail || channel.snippet?.thumbnails?.medium?.url || channel.snippet?.thumbnails?.default?.url || '',
+		custom_text = escape_html($('#socialfeeds-youtube-header-text').val()?.trim()),
+		title = escape_html(channel.title || channel.snippet?.title || ''),
+		description = escape_html(channel.description || channel.snippet?.description || ''),
+		thumbnail = escape_url(channel.thumbnail || channel.snippet?.thumbnails?.medium?.url || channel.snippet?.thumbnails?.default?.url || ''),
 		banner_url = $('#socialfeeds-youtube-header-banner-url').val()?.trim(),
 		show_banner = $('#socialfeeds-youtube-header-show-banner').is(':checked'),
 		channel_banner = channel.bannerExternalUrl || channel.brandingSettings?.image?.bannerExternalUrl || '',
@@ -939,7 +968,7 @@ jQuery(document).ready(function ($) {
 		let html = '';
 
 		if (show_banner) {
-			let final_banner = banner_url || channel_banner;
+			let final_banner = escape_url(banner_url || channel_banner);
 			if (final_banner) {
 				html += `
 					<div class="socialfeeds-header-banner" style="margin-bottom:${banner_margin}; border-radius:8px; overflow:hidden; width:100%;">
@@ -1682,7 +1711,8 @@ jQuery(document).ready(function ($) {
 						row.attr('data-feed-id', feedId);
 						btn.attr('data-feed-id', feedId);
 					}
-					wrapper.find('.socialfeeds-feed-name-text').html('<strong>' + newName + '</strong>');
+					let display_name = (response.data && response.data.name) ? response.data.name : newName;
+					wrapper.find('.socialfeeds-feed-name-text').empty().append($('<strong>').text(display_name));
 				},
 				error: function () {
 					show_toast('Error saving feed name. Please try again.', 'error');

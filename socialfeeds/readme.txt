@@ -2,9 +2,9 @@
 Contributors: softaculous
 Tags: social feeds, instagram feed, youtube feed, social media, youtube videos
 Requires at least: 5.0
-Tested up to: 7.0
+Tested up to: 7.1
 Requires PHP: 7.2
-Stable tag: 1.0.7
+Stable tag: 1.0.8
 License: GPLv2
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -118,6 +118,16 @@ Install SocialFeeds today to display your Instagram photos and YouTube videos on
 
 
 == Changelog ==
+
+= 1.0.8 =
+
+* [Security-Fix] There were security issues related to YouTube API requests and AJAX endpoints that have been fixed, reported by Averon Averenkov (averonsec.com).
+* [Security-Fix] There were multiple XSS vulnerabilities in the admin and frontend interfaces that have been fixed, reported by Averon Averenkov (averonsec.com).
+* [Security-Fix] There was an issue related to the handling of YouTube API credentials that has been fixed, reported by Averon Averenkov (averonsec.com).
+* [Security-Fix] There was an issue related to URL escaping for YouTube thumbnails that has been fixed, reported by Averon Averenkov (averonsec.com).
+* [Pro-Improvement] Added an option to set content alignment for Instagram feeds.
+* [Bug-Fix] Fixed an issue where Google Reviews were not being translated.
+* [Task] Tested with WordPress 7.1.
 
 = 1.0.7 =
 

@@ -3,7 +3,7 @@
 Plugin Name: SocialFeeds
 Plugin URI: https://socialfeeds.org
 Description: YouTube feeds for WordPress with simple Setup and Settings options.
-Version: 1.0.7
+Version: 1.0.8
 Author: Softaculous Team
 Author URI: https://softaculous.com/
 Text Domain: socialfeeds
@@ -20,7 +20,7 @@ if(!function_exists('add_action')){
 }
 
 //SOCIALFEEDS
-define('SOCIALFEEDS_VERSION', '1.0.7');
+define('SOCIALFEEDS_VERSION', '1.0.8');
 define('SOCIALFEEDS_FILE', __FILE__);
 define('SOCIALFEEDS_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('SOCIALFEEDS_PLUGIN_URL', plugin_dir_url(__FILE__));
@@ -57,6 +57,7 @@ function socialfeeds_load_plugin(){
 
 	//load all the options
 	$socialfeeds->youtube_settings = get_option('socialfeeds_youtube_option', []);
+	\SocialFeeds\Util::maybe_encrypt_stored_api_key();
 
 	if(wp_doing_ajax()){
 		\SocialFeeds\Ajax::hooks();

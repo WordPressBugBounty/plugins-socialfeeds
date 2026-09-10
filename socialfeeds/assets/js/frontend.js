@@ -1,5 +1,38 @@
 jQuery(document).ready(function ($) {
 
+	function escape_html(str) {
+		if (str === null || str === undefined) {
+			return '';
+		}
+		return $('<div>').text(String(str)).html();
+	}
+
+	function escape_attr(str) {
+		return escape_html(str).replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+	}
+
+	function escape_url(url) {
+    if (!url) {
+    	return '';
+    }
+
+    let parsed = new URL(String(url), window.location.origin);
+
+    if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+    	return '';
+    }
+
+    return parsed.href;
+	}
+
+	function sanitize_youtube_id(id) {
+		if (!id) {
+			return '';
+		}
+		let match = String(id).match(/[A-Za-z0-9_-]{11}/);
+		return match ? match[0] : '';
+	}
+
 	// ===== Video play mode: LIGHTBOX, INLINE, NEWTAB =====
 	$('.socialfeeds-youtube-feed').on('click','.socialfeeds-video-item a, .socialfeeds-media-link, .socialfeeds-carousel-item a, .socialfeeds-list-item iframe',function(e){
   	let $link = $(this).closest('a');
@@ -172,19 +205,22 @@ jQuery(document).ready(function ($) {
 					let is_list = $itemsContainer.hasClass('socialfeeds-youtube-list');
 
 					items.forEach(function (item) {
-						let vid = item.videoId;
-						let title = item.title || 'Video';
-						let thumb = (item.thumbnails && item.thumbnails.medium) ? item.thumbnails.medium.url :
-							((item.thumbnails && item.thumbnails.default) ? item.thumbnails.default.url : '');
+						let vid = sanitize_youtube_id(item.videoId);
+						if (!vid) {
+							return;
+						}
+						let title = escape_html(item.title || 'Video');
+						let thumb = escape_url((item.thumbnails && item.thumbnails.medium) ? item.thumbnails.medium.url :
+							((item.thumbnails && item.thumbnails.default) ? item.thumbnails.default.url : ''));
 						let desc = item.description || '';
-						let short_desc = desc ? (desc.substring(0, 54) + '...') : '';
+						let short_desc = desc ? escape_html(desc.substring(0, 54) + '...') : '';
 
 						let item_html = '';
 						if (is_grid) {
 							item_html = `
 									<div class="socialfeeds-video-item">
-										<a href="https://www.youtube.com/watch?v=${vid}" target="_blank" rel="noopener">
-											<img src="${thumb}" alt="${title}" />
+										<a href="https://www.youtube.com/watch?v=${encodeURIComponent(vid)}" target="_blank" rel="noopener">
+											<img src="${thumb}" alt="${escape_attr(item.title || 'Video')}" />
 										</a>
 										${title ? `<h5 class="socialfeeds-video-title">${title}</h5>` : ''}
 										${short_desc ? `<p class="socialfeeds-card-desc">${short_desc}</p>` : ''}
@@ -192,8 +228,8 @@ jQuery(document).ready(function ($) {
 						} else if (is_carousel) {
 							item_html = `
 									<div class="socialfeeds-video-item socialfeeds-carousel-item">
-										<a href="https://www.youtube.com/watch?v=${vid}" target="_blank" rel="noopener" style="display:block; position:relative;">
-											<img src="${thumb}" alt="${title}" />
+										<a href="https://www.youtube.com/watch?v=${encodeURIComponent(vid)}" target="_blank" rel="noopener" style="display:block; position:relative;">
+											<img src="${thumb}" alt="${escape_attr(item.title || 'Video')}" />
 											<span class="socialfeeds-play-overlay"></span>
 										</a>
 										${title ? `<p class="socialfeeds-video-title">${title}</p>` : ''}
@@ -203,7 +239,7 @@ jQuery(document).ready(function ($) {
 									<div class="socialfeeds-video-item socialfeeds-list-item">
 										${title ? `<h3 class="socialfeeds-video-title">${title}</h3>` : ''}
 										<div class='socialfeeds-video-iframe-wrap'>
-											<iframe width="560" height="315" src="https://www.youtube.com/embed/${vid}" frameborder="0" allowfullscreen></iframe>
+											<iframe width="560" height="315" src="https://www.youtube.com/embed/${encodeURIComponent(vid)}" frameborder="0" allowfullscreen></iframe>
 										</div>
 										${short_desc ? `<p class="socialfeeds-video-desc">${short_desc}</p>` : ''}
 									</div>`;
@@ -211,8 +247,8 @@ jQuery(document).ready(function ($) {
 							// Default/Fallback
 							item_html = `
 									<div class="socialfeeds-video-item">
-										<a href="https://www.youtube.com/watch?v=${vid}" target="_blank" rel="noopener">
-											<img src="${thumb}" alt="${title}" />
+										<a href="https://www.youtube.com/watch?v=${encodeURIComponent(vid)}" target="_blank" rel="noopener">
+											<img src="${thumb}" alt="${escape_attr(item.title || 'Video')}" />
 										</a>
 										${title ? `<h5 class="socialfeeds-video-title">${title}</h5>` : ''}
 										${short_desc ? `<p class="socialfeeds-card-desc">${short_desc}</p>` : ''}
